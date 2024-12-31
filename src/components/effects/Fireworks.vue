@@ -6,10 +6,11 @@ let ctx: CanvasRenderingContext2D | null = null;
 let animationFrame: number;
 
 class Firework {
-  x: number;
-  y: number;
-  targetY: number;
-  speed: number;
+  x!: number;
+  y!: number;
+  targetY!: number;
+  speed!: number;
+  color!: string;
   particles: Array<{
     x: number;
     y: number;
@@ -20,7 +21,6 @@ class Firework {
     size: number;
     sparkTrail: Array<{ x: number; y: number; alpha: number }>;
   }> = [];
-  color: string;
   exploded: boolean = false;
   trail: Array<{ x: number; y: number; alpha: number }> = [];
   private readonly fadeRate = 0.985;
@@ -39,22 +39,18 @@ class Firework {
     this.targetY = Math.random() * (canvasHeight * 0.3) + canvasHeight * 0.2;
     this.speed = 1.2 + Math.random() * 1.8;
     this.color = `hsl(${Math.random() * 360}, 100%, 70%)`;
-
     this.trail.push({ x: this.x, y: this.y, alpha: 1 });
   }
 
   explode() {
     if (!this.isValid || this.exploded) return;
-    
+
     const particleCount = Math.min(180, this.maxParticles);
+    const baseHue = parseInt(this.color.match(/\d+/)?.[0] ?? "0");
     const colors = [
       this.color,
-      `hsl(${
-        Math.random() * 30 - 15 + parseInt(this.color.match(/\d+/)[0])
-      }, 100%, 70%)`,
-      `hsl(${
-        Math.random() * 30 - 15 + parseInt(this.color.match(/\d+/)[0])
-      }, 90%, 75%)`,
+      `hsl(${Math.random() * 30 - 15 + baseHue}, 100%, 70%)`,
+      `hsl(${Math.random() * 30 - 15 + baseHue}, 90%, 75%)`,
       "#FFD700",
       "#FFFFFF",
     ];
@@ -113,7 +109,7 @@ class Firework {
     if (!this.exploded) {
       this.trail.forEach((point, index) => {
         ctx.beginPath();
-        const trailAlpha = (point.alpha * 0.3) * (1 - index / this.trailLength);
+        const trailAlpha = point.alpha * 0.3 * (1 - index / this.trailLength);
         ctx.fillStyle = `rgba(255, 220, 180, ${trailAlpha})`;
         ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
         ctx.fill();
@@ -136,10 +132,14 @@ class Firework {
 
         ctx.save();
         ctx.globalAlpha = p.alpha;
-        
+
         const gradient = ctx.createRadialGradient(
-          p.x, p.y, 0,
-          p.x, p.y, p.size * 4
+          p.x,
+          p.y,
+          0,
+          p.x,
+          p.y,
+          p.size * 4
         );
         gradient.addColorStop(0, `rgba(255, 255, 255, ${p.alpha * 0.3})`);
         gradient.addColorStop(0.6, `rgba(255, 255, 200, ${p.alpha * 0.12})`);
@@ -160,7 +160,15 @@ class Firework {
   }
 
   isDead(): boolean {
-    return !this.isValid || (this.exploded && this.particles.every((p) => p.alpha < 0.02));
+    return (
+      !this.isValid ||
+      (this.exploded && this.particles.every((p) => p.alpha < 0.02))
+    );
+  }
+
+  static create(canvas: HTMLCanvasElement | null): Firework | null {
+    if (!canvas) return null;
+    return new Firework(canvas.width, canvas.height);
   }
 }
 
@@ -182,11 +190,17 @@ const animate = () => {
   }
 
   if (fireworks.length < 10 && Math.random() < 0.02) {
-    fireworks.push(new Firework(canvas.value.width, canvas.value.height));
-    if (Math.random() < 0.2) {
-      setTimeout(() => {
-        fireworks.push(new Firework(canvas.value.width, canvas.value.height));
-      }, 100 + Math.random() * 200);
+    const newFirework = Firework.create(canvas.value);
+    if (newFirework) {
+      fireworks.push(newFirework);
+      if (Math.random() < 0.2) {
+        setTimeout(() => {
+          const additionalFirework = Firework.create(canvas.value);
+          if (additionalFirework) {
+            fireworks.push(additionalFirework);
+          }
+        }, 100 + Math.random() * 200);
+      }
     }
   }
 
