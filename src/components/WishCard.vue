@@ -29,8 +29,8 @@ const themeStyles = {
   light: {
     wrapper:
       "bg-white/10 text-gray-800 text-white backdrop-blur-md backdrop-saturate-150 backdrop-brightness-125",
-    title: "text-green-600",
-    underline: "border-green-600",
+    title: "text-red-600",
+    underline: "border-red-600",
   },
 };
 

@@ -56,7 +56,7 @@ const categoryTitle = computed(
     <div class="mt-6 text-center">
       <button
         @click="downloadImage"
-        class="px-6 py-3 bg-green-500 hover:bg-green-600 rounded-full transition-colors text-white"
+        class="px-6 py-3 bg-red-500 hover:bg-red-600 rounded-full transition-colors text-white"
       >
         保存愿望卡片
       </button>
